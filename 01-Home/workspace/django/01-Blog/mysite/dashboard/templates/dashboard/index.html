@@ -1,0 +1,116 @@
+<!doctype html>
+<HTML>
+<head>
+<title>IC2140 IoT Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.mi
+n.css" rel="stylesheet" integrity="sha384-
+wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeMj0" crossorigin=
+"anonymous">
+</head>
+<body>
+    <h1 class="display-3 p-3 mb-2 bg-danger text-white">IC2140 IoT Dashboard</h1>
+<script src="https://cdn.flexmonster.com/flexmonster.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.flexmonster.com/theme/Midnight/flexmonster.min.css" />
+<div id="pivot-container" >
+    <script>
+        function processData(dataset) {
+        var result = []
+        dataset = JSON.parse(dataset);
+        dataset.forEach(item => result.push(item.fields));
+        return result;
+        }
+            $.ajax({
+            url: '/dashboard/temp_data',
+            dataType: 'json',
+            success: function(data) {
+            new Flexmonster({
+            container: "#pivot-container",
+            componentFolder: "https://cdn.flexmonster.com/",
+            toolbar: true,
+            report: {
+            dataSource: {
+            type: "json",
+            data: processData(data),
+            mapping: {
+            "node_id": { "caption": "ID" },
+            "loc": { "caption": "Venue" },
+            "temp": { "caption": "Temperature", "type": "number" },
+            "hum": { "caption": "humidity", "type": "number" },
+            "create_time": { "caption": "Created Date", "type": "datetime" },
+            "snd": { "caption": "snd", "type": "number" },
+            "light": { "caption": "light", "type": "number" },
+            },
+            },
+            slice: {
+                rows: [
+                { uniqueName : "create_time"},
+            ],
+                columns: [
+                { uniqueName : "loc"},
+                { uniqueName : "temp" },
+                { uniqueName : "snd" },
+                { uniqueName : "light" },
+
+                
+            ],
+            measures: [
+            { uniqueName : "temp" ,
+            format : "degree",},
+            { uniqueName : "light" ,
+            format : "%",},
+            { uniqueName : "light" ,
+            format : "%",},
+            ]
+            },
+            
+            formats: [
+            {
+                name: "degree",
+                decimalPlaces: 1,
+            }
+            ],
+            conditions: [
+                {
+                formula: "#value < 25",
+                measure: "temp",
+                format: {
+                    "color": "#FF0000"
+                    }
+                }
+            ],
+            options: {
+                viewType: "charts",
+                chart: {
+                    type: "line",
+                    },
+            },
+            }
+            });
+            function getFeed() {
+                $.ajax({
+                        url: '/dashboard/temp_data',
+                        dataType: 'json',
+                        success: function(data) {
+                            flexmonster.updateData({
+                                data: processData(data)
+                            });
+                        },
+                        complete:function(data) {
+                            setTimeout(getFeed, 5000);
+                        }
+                    });
+                }
+                $(document).ready(function() {
+                    setTimeout(getFeed, 5000); // 5 seconds
+                });
+            
+            
+            }
+            });
+
+            
+            </script>
+</div>
+</body>
+</HTML>
